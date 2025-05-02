@@ -1,15 +1,19 @@
 import os
 import json
-import requests
 import logging
-from datetime import datetime, timedelta
+import gzip
+import requests
+from datetime import datetime, timedelta, timezone
 from azure.storage.filedatalake import DataLakeServiceClient
 from jsonschema import validate
+from requests.exceptions import HTTPError
 
-#logging configuration
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# ──────────────────────────────────────────────────────────────────────────────
+# Logging configuration
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+# JSON schema for raw GHArchive events
 RAW_SCHEMA = {
     "type": "array",
     "items": {
@@ -20,98 +24,125 @@ RAW_SCHEMA = {
             "type": {"type": "string"},
             "actor": {"type": "object"},
             "repo": {"type": "object"},
-            "created_at": {"type": "string", "format": "date-time"},
+            "created_at": {"type": "string", "format": "date-time"}
         }
     }
 }
 
-def fetch_github_events(hour_utc: str) -> bytes:
+# ──────────────────────────────────────────────────────────────────────────────
+def fetch_github_events(hour_utc: str) -> bytes | None:
     """
-    Fetches GitHub events from the API.
-    :param hour_utc: The UTC hour to fetch events for.
-    :return: The response content in bytes.
+    Download the .json.gz for a given UTC hour.
+    Returns the raw bytes, or None if the hour isn’t published yet (404).
     """
     url = f"https://data.gharchive.org/{hour_utc}.json.gz"
     logger.info(f"Fetching data from {url}")
 
-    try: 
-        resposnse = requests.get(url, stream=True, timeout=30)
-        resposnse.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching data from GitHub: {str(e)}")
-        raise
-
-def validate_json_schema(data: bytes) -> None:
-    """
-    Validates the JSON data against the schema.
-    :param data: The JSON data in bytes.
-    :return: None
-    """
     try:
-        json_data = json.loads(data.decode('utf-8'))
-        # Validate the JSON data against the schema
-        validate(instance=json_data, schema=RAW_SCHEMA)
-        logger.info("JSON data is valid.")
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON decoding error: {str(e)}")
+        resp = requests.get(url, stream=True, timeout=30)
+        resp.raise_for_status()
+        return resp.content
+
+    except HTTPError as e:
+        if e.response.status_code == 404:
+            logger.warning(f"No data for {hour_utc} (404). Will retry later.")
+            return None
+        logger.error(f"HTTP error fetching data: {e}")
         raise
+
     except Exception as e:
-        logger.error(f"Schema validation error: {str(e)}")
+        logger.error(f"Unexpected error fetching data: {e}")
         raise
 
-def upload_to_adls(data: bytes, file_path: str) -> None:
+# ──────────────────────────────────────────────────────────────────────────────
+def validate_json_schema(raw_bytes: bytes) -> None:
     """
-    Uploads the data to Azure Data Lake Storage.
-    :param data: The data to upload in bytes.
-    :param file_path: The path in ADLS where the data will be stored.
-    :return: None
+    Decompresses the GZIP payload, splits into JSON lines,
+    and validates against RAW_SCHEMA.
     """
+# Update RAW_SCHEMA to validate individual events
+RAW_SCHEMA = {
+    "type": "object",
+    "required": ["id", "type", "actor", "repo", "created_at"],
+    "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string"},
+        "actor": {"type": "object"},
+        "repo": {"type": "object"},
+        "created_at": {"type": "string", "format": "date-time"}
+    }
+}
 
-        # Initialize the DataLakeServiceClient
+def validate_json_schema(raw_bytes: bytes) -> None:
+    """Validate JSONL format line-by-line"""
+    decompressed = gzip.decompress(raw_bytes)
+    lines = decompressed.decode().split('\n')
+    
+    valid_count = 0
+    for idx, line in enumerate(lines, 1):
+        if not line.strip():
+            continue
+            
+        try:
+            event = json.loads(line)
+            validate(instance=event, schema=RAW_SCHEMA)
+            valid_count += 1
+        except json.JSONDecodeError:
+            logger.error(f"Invalid JSON at line {idx}")
+            raise
+        except ValidationError as e:
+            logger.error(f"Schema violation at line {idx}: {str(e)}")
+            raise
+
+    logger.info(f"Validated {valid_count} events successfully")
+# ──────────────────────────────────────────────────────────────────────────────
+def upload_to_adls(raw_bytes: bytes, path: str) -> None:
+    """
+    Upload the gzipped bytes into Azure Data Lake Storage Gen2.
+    """
+    acct = os.getenv("AZURE_STORAGE_ACCOUNT")
+    key  = os.getenv("AZURE_STORAGE_KEY")
+
+    if not acct or not key:
+        raise ValueError("Missing AZURE_STORAGE_ACCOUNT or AZURE_STORAGE_KEY")
+
     service_client = DataLakeServiceClient(
-        account_url=f"https://{os.environ['AZURE_STORAGE_ACCOUNT']}.dfs.core.windows.net",
-        credential=os.environ['AZURE_STORAGE_KEY']
+        account_url=f"https://{acct}.dfs.core.windows.net",
+        credential=key
     )
-    file_system_client = service_client.get_file_system_client("raw-events")
+    fs_client   = service_client.get_file_system_client("raw-events")
+    file_client = fs_client.get_file_client(path)
 
-    try:
-        file_client = file_system_client.get_file_client(file_path)
-        file_client.create_file()
-        file_client.append(data, 0, len(data))
-        file_client.flush_data(len(data))
-        logger.info(f'Uploaded {len(data)} bytes to {file_path}')
-    except Exception as e:
-        logger.error(f"Error uploading to ADLS: {str(e)}")
-        raise
+    # Create/overwrite, then write & flush
+    file_client.create_file()
+    file_client.append(raw_bytes, offset=0, length=len(raw_bytes))
+    file_client.flush_data(len(raw_bytes))
+    logger.info(f"Uploaded {len(raw_bytes)} bytes to {path}")
 
+# ──────────────────────────────────────────────────────────────────────────────
 def main():
-    """
-    Main function to orchestrate the ingestion process.
-    :return: None
-    """
-    try:
-        #  get data from the last hour (GH archive delay)
-        target_time = datetime.now(datetime.timezone.utc) - timedelta(hours=2)
-        hour_str = target_time.strftime("%Y-%m-%d-%H")
+    # Compute the hour to fetch (3 hours ago UTC)
+    
+    target = datetime.now(timezone.utc) - timedelta(hours=3)
+    hour_str = "2024-05-20-12"  # Known valid hour
+    
+    # Keep rest of your code...
+    logger.info(f"OVERRIDE Processing hour: {hour_str}")
 
-        raw_data = fetch_github_events(hour_str)
-        validate_json_schema(raw_data)
+    # Fetch (or get None if not yet available)
+    raw = fetch_github_events(hour_str)
+    if raw is None:
+        return  # no data published yet—exit cleanly
 
-        file_path = (
-            f"year={target_time.year}/"
-            f"month={target_time.month:02d}/"
-            f"day={target_time.day:02d}/"
-            f"data_{hour_str}.json.gz"  
-        )
-
-
-        upload_to_adls(raw_data, file_path)
-
-    except Exception as e:
-        logger.error(f"An error occurred: {str(e)}")
-        raise
+    # Validate & upload
+    validate_json_schema(raw)
+    dest_path = (
+        f"year={target.year}/"
+        f"month={target.month:02d}/"
+        f"day={target.day:02d}/"
+        f"data_{hour_str}.json.gz"
+    )
+    upload_to_adls(raw, dest_path)
 
 if __name__ == "__main__":
     main()
-    
-
