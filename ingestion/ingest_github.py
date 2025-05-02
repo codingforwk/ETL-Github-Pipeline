@@ -101,7 +101,7 @@ def upload_to_adls(raw_bytes: bytes, path: str) -> None:
     Upload the gzipped bytes into Azure Data Lake Storage Gen2.
     """
     acct = os.getenv("AZURE_STORAGE_ACCOUNT")
-    key  = os.getenv("AZURE_STORAGE_KEY")
+    key = os.getenv("AZURE_STORAGE_KEY")
 
     if not acct or not key:
         raise ValueError("Missing AZURE_STORAGE_ACCOUNT or AZURE_STORAGE_KEY")
@@ -110,13 +110,15 @@ def upload_to_adls(raw_bytes: bytes, path: str) -> None:
         account_url=f"https://{acct}.dfs.core.windows.net",
         credential=key
     )
-    fs_client   = service_client.get_file_system_client("raw-events")
-    file_client = fs_client.get_file_client(path)
-
-    # Create/overwrite, then write & flush
-    file_client.create_file()
-    file_client.append(raw_bytes, offset=0, length=len(raw_bytes))
-    file_client.flush_data(len(raw_bytes))
+    
+    file_client = service_client.get_file_system_client("raw-events").get_file_client(path)
+    
+    # Single upload operation
+    file_client.upload_data(
+        data=raw_bytes,
+        overwrite=True,
+        metadata={"source": "gharchive-ingestor"}
+    )
     logger.info(f"Uploaded {len(raw_bytes)} bytes to {path}")
 
 # ──────────────────────────────────────────────────────────────────────────────

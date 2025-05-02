@@ -3,6 +3,7 @@
 *.tfstate
 *.tfstate.backup
 *.tfvars
+*.tfplan
 
 # Python
 __pycache__/
