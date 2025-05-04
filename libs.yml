@@ -1,9 +1,0 @@
-name: spark-synapse-env
-channels:
-  - conda-forge
-  - defaults
-dependencies:
-  - python=3.10
-  - pip
-  - pip:
-      - great-expectations==0.17.9
