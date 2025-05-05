@@ -1,9 +1,0 @@
-paths:
-  bronze: "abfss://raw-events@githubdatastoreyoussef2.dfs.core.windows.net/year=*/month=*/day=*/data_*.json.gz"
-  silver: "abfss://processed-events@githubdatastoreyoussef2.dfs.core.windows.net/silver_events"
-
-great_expectations:
-  suite_name: "silver_suite"
-
-logging:
-  level: "INFO"

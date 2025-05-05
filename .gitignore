@@ -30,3 +30,5 @@ plugins/
 # Misc
 .DS_Store
 *.log
+
+.venv
