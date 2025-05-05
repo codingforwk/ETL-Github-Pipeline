@@ -24,10 +24,10 @@ def get_spark(app_name="ETL-Github-Pipeline", master="local[*]", extra_conf=None
     builder = builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
     builder = builder.config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
 
-    storage_account = "githubdatastoreyoussef2"
+    #storage_account = "githubdatastoreyoussef2"
     #account_key = exported
+    builder = builder.config(f"fs.azure.account.key.{os.getenv('storage_account')}.dfs.core.windows.net", os.getenv('account_key'))
 
-    builder = builder.config(f"fs.azure.account.key.{storage_account}.dfs.core.windows.net", os.getenv("account_key"))
 
     if extra_conf:
         for key, value in extra_conf.items():
