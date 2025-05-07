@@ -1,6 +1,12 @@
 import os
 import logging
 from pyspark.sql import SparkSession
+from dotenv import load_dotenv
+
+load_dotenv()
+
+account_name = os.getenv("AZURE_STORAGE_ACCOUNT")
+account_key = os.getenv("AZURE_STORAGE_KEY")
 
 def get_spark(app_name="ETL-Github-Pipeline", master="local[*]", extra_conf=None):
     builder = SparkSession.builder.appName(app_name).master(master)
@@ -25,7 +31,7 @@ def get_spark(app_name="ETL-Github-Pipeline", master="local[*]", extra_conf=None
     builder = builder.config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
 
 
-    builder = builder.config(f"fs.azure.account.key.{os.getenv('storage_account')}.dfs.core.windows.net", os.getenv('account_key'))
+    builder = builder.config(f"fs.azure.account.key.{account_name}.dfs.core.windows.net", account_key)
 
 
     if extra_conf:

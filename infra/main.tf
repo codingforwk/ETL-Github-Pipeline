@@ -64,7 +64,7 @@ resource "azurerm_role_assignment" "synapse_storage" {
 resource "azurerm_synapse_sql_pool" "sql_pool" {
   name                 = "githubpool"
   synapse_workspace_id = azurerm_synapse_workspace.synapse.id
-  sku_name             = "DW100c"  # Cost-effective tier for testing
+  sku_name             = "DW100c"  
   create_mode          = "Default"
 }
 
