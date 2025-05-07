@@ -18,6 +18,9 @@ spark-3.4.3-bin-hadoop3.tgz
 env
 dbt_env
 
+config.yaml
+
+
 # Docker
 docker-compose.override.yml
 
