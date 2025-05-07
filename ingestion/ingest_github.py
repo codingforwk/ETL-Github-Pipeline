@@ -132,7 +132,7 @@ def main():
         raw_data_prefix = config.get("paths", {}).get("raw_data_prefix")
 
         # Fixed ingestion datetime for testing (May 20, 2024, 12:00 UTC)
-        target = datetime(2024, 5, 20, 12, 0, 0, tzinfo=timezone.utc)
+        target = datetime(2024, 5, 21, 12, 0, 0, tzinfo=timezone.utc)
         hour_str = target.strftime("%Y-%m-%d-%H")
         logger.info(f"Processing GitHub archive for fixed hour: {hour_str}")
 
