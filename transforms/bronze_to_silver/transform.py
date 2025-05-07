@@ -2,7 +2,7 @@ import logging
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import col, to_timestamp, trim, lower
 from utils.spark_utils import get_spark
-from validations import validate_bronze, validate_silver  # Import GE validation functions
+from validations import validate_bronze, validate_silver  
 
 # Configure logger
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
