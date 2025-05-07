@@ -160,7 +160,7 @@ def main():
 
     # Replace these paths with your actual data locations or pass as CLI args
     bronze_path = "abfss://raw-events@githubdatastoreyoussef2.dfs.core.windows.net/year=2024"
-    silver_path = "abfss://processed-events@githubdatastoreyoussef2.dfs.core.windows.net/"
+    silver_path = "abfss://processed-events@githubdatastoreyoussef2.dfs.core.windows.net/silver"
 
     transform_bronze_to_silver(spark, bronze_path, silver_path)
 
