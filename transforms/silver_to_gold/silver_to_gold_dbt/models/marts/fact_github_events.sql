@@ -2,13 +2,13 @@
     materialized='incremental',
     schema='gold',
     unique_key='event_id',
-    incremental_strategy='merge',
+    incremental_strategy='delete+insert',
     partition_by={'field': 'event_day', 'data_type': 'date'}
 ) }}
 
 SELECT
     stg.event_id,
-    dim_actor.actor_id,
+    dim_actor.actor_login,
     stg.event_type,
     dim_type.event_category,
     dim_repo.repo_name,

@@ -3,7 +3,7 @@
         materialized='incremental',
         schema='gold',
         unique_key='actor_login',
-        incremental_strategy='merge'
+        incremental_strategy='delete+insert'
     )
 }}
 

@@ -2,7 +2,7 @@
     config(
         materialized='incremental',
         schema='staging',
-        incremental_strategy = 'merge',
+        incremental_strategy = 'delete+insert',
         unique_key = 'event_id',
         partition_by={
             'field':'event_day',
