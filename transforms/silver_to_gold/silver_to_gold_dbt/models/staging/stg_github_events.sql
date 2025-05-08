@@ -16,14 +16,11 @@ SELECT
     repo_name,
     created_at_ts,
     CAST(created_at_ts AS DATE) as event_day,
-    TIMESTAMP_TRUNC(created_at_ts, 'HOUR') as event_hour
-    FROM
+    DATEADD(HOUR, DATEDIFF(HOUR, 0, created_at_ts), 0) as event_hour
+FROM
     {{ source('dbo', 'github_events') }}
-    WHERE
+WHERE
     1=1
     {% if is_incremental() %}
-    AND created_at_ts >= TIMESTAMP_SUB(
-        TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), HOUR),
-        INTERVAL 1 HOUR
-    )
+    AND created_at_ts >= DATEADD(HOUR, -1, DATEADD(HOUR, DATEDIFF(HOUR, 0, GETDATE()), 0))
     {% endif %}

@@ -2,7 +2,7 @@
 # Name your project! Project names should contain only lowercase characters
 # and underscores. A good package name should reflect your organization's
 # name or the intended use of these models
-name: 'silver_to_gold_dbt'
+name: 'Github_Analytics'
 version: '1.0.0'
 
 # This setting configures which "profile" dbt uses for this project.
@@ -18,6 +18,7 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
+
 clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
@@ -31,8 +32,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   silver_to_gold_dbt:
-    +generate_database: false
-
-sources:
-  silver_to_gold_dbt:
-    +generate_database: false
+    staging:
+      +schema: staging
+    marts:
+      +schema: gold
