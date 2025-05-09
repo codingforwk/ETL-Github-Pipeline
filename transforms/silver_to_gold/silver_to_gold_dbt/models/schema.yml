@@ -1,0 +1,135 @@
+version: 2
+
+sources:
+  - name: dbo         
+    database: githubpool           
+    schema: dbo                     
+    tables:
+      - name: github_events         
+        description: "Cleaned GitHub events data from the Warehouse"
+        
+        columns:
+          - name: id
+            description: "Unique event ID from GitHub API"
+            data_tests:
+              - unique
+              - not_null
+
+          - name: type
+            description: "Event type (e.g., PushEvent, PullRequestEvent)"
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['PushEvent', 'PullRequestEvent', 'IssuesEvent', 'CreateEvent', 'ReleaseEvent' , 'IssueCommentEvent' , 'PullRequestReviewCommentEvent']
+            
+          - name: actor_login
+            description: "GitHub username of the actor"
+            data_tests:
+              - not_null
+            
+          - name: repo_name
+            description: "Repository name where the event occurred"
+            data_tests:
+              - not_null
+            
+          - name: created_at_ts
+            description: "Timestamp of when the event was created"
+            data_tests:
+              - not_null
+
+
+models:
+  - name: stg_github_events
+    description: "Staging model for GitHub events data"
+    columns:
+      - name: event_id
+        description: "Unique event ID from GitHub API"
+        data_tests:
+          - unique
+          - not_null
+
+      - name: event_type
+        description: "Event type (e.g., PushEvent, PullRequestEvent)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['PushEvent', 'PullRequestEvent', 'IssuesEvent', 'CreateEvent', 'ReleaseEvent' , 'IssueCommentEvent' , 'PullRequestReviewCommentEvent']
+      - name: actor_login 
+        description: "GitHub username of the actor"
+        data_tests:
+          - not_null
+      - name: repo_name
+        description: "Repository name where the event occurred"
+        data_tests:
+          - not_null
+      - name: created_at_ts
+        description: "Timestamp of when the event was created"
+        data_tests:
+          - not_null
+      - name: event_day
+        description: "Date of the event"
+        data_tests:
+          - not_null
+
+  - name: dim_actors
+    description: "Unique GitHub users from event data"
+    columns:
+      - name: actor_login
+        description: "GitHub username"
+        data_tests:
+          - not_null
+          - unique
+
+
+  - name: dim_event_types
+    description: "Dimension table of event types with categories"
+    columns:
+      - name: event_type
+        description: "Raw event type from GitHub"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: event_category
+        description: "Grouped category of the event type"
+
+  - name: dim_repos
+    description: "Repository dimension with unique repo names"
+    columns:
+      - name: repo_name
+        description: "Repository name from GitHub events"
+        data_tests:
+          - not_null
+          - unique
+
+  - name: fact_github_events
+    description: "Fact table capturing GitHub event-level data with references to dimensions"
+    columns:
+      - name: event_id
+        description: "Unique identifier for the event"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: actor_id
+        description: "Foreign key to dim_actors"
+
+      - name: event_type
+        description: "Original GitHub event type"
+
+      - name: event_category
+        description: "Mapped category from dim_event_types"
+
+      - name: repo_name
+        description: "Repository where the event occurred"
+
+      - name: created_at_ts
+        description: "Timestamp when the event occurred"
+
+      - name: event_day
+        description: "Date portion of the event timestamp"
+
+      - name: event_hour
+        description: "Hour-rounded timestamp for aggregation"  
+
+          
