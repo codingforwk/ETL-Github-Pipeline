@@ -31,3 +31,62 @@ ETL-Github-Pipeline/
 ├── requirements.txt        # Dependency list
 └── README.md               # Documentation
 ```
+#⚙️ Pipeline Flow
+1. Data Ingestion  
+   - Collects GitHub data via Python scripts  
+   - Stores raw data as Parquet in Azure Data Lake (Bronze)  
+
+2. Bronze to Silver Transformation  
+   - Processes data using Spark transformations  
+   - Outputs cleaned data in Delta format (Silver)  
+
+3. Azure Synapse Activation  
+   - Triggers Synapse pipelines via Python API  
+   - Handles large-scale data processing  
+
+4. dbt Modeling Layer  
+   - Creates analytical models from processed data  
+   - Generates final Gold-tier datasets  
+
+5. Airflow Orchestration  
+   - Coordinates all pipeline stages  
+   - Handles scheduling and error recovery  
+
+## Setup Instructions
+1. Clone repository:
+   ```
+   git clone https://github.com/your-repo/ETL-Github-Pipeline  
+  
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt  
+
+5. Initialize infrastructure:
+   ```
+   cd infra  
+   terraform init  
+   terraform apply  
+
+7. Configure environment:  
+   export AZURE_TENANT_ID=your_tenant_id  
+   export SYNAPSE_WORKSPACE=your_workspace_name  
+
+## Execution Commands
+- Start Airflow:  
+  airflow standalone  
+
+- Run Spark job:  
+  spark-submit transforms/bronze_to_silver/transform.py  
+
+- Execute dbt models:  
+  dbt run --project-dir transforms/silver_to_gold  
+
+## Quality Assurance
+- Run unit tests:  
+  pytest tests/  
+
+- Validate data models:  
+  dbt test  
+
+- Monitor pipeline:  
+  airflow dags list-runs  
