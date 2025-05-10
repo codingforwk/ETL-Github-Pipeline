@@ -31,7 +31,7 @@ ETL-Github-Pipeline/
 ├── requirements.txt        # Dependency list
 └── README.md               # Documentation
 ```
-#⚙️ Pipeline Flow
+## ⚙️ Pipeline Flow
 1. Data Ingestion  
    - Collects GitHub data via Python scripts  
    - Stores raw data as Parquet in Azure Data Lake (Bronze)  
@@ -52,7 +52,7 @@ ETL-Github-Pipeline/
    - Coordinates all pipeline stages  
    - Handles scheduling and error recovery  
 
-##🚦 Setup Instructions
+## 🚦 Setup Instructions
 1. Clone repository:
    ```
    git clone https://github.com/your-repo/ETL-Github-Pipeline  
@@ -72,7 +72,7 @@ ETL-Github-Pipeline/
    export AZURE_TENANT_ID=your_tenant_id  
    export SYNAPSE_WORKSPACE=your_workspace_name  
 
-## Execution Commands
+## 🎚 Execution Commands
 - Start Airflow:
   ```
   airflow standalone  
@@ -85,7 +85,7 @@ ETL-Github-Pipeline/
   ```
   dbt run --project-dir transforms/silver_to_gold  
 
-#✅ Quality Assurance
+## ✅ Quality Assurance
 - Run unit tests:
   ```
   pytest tests/  
