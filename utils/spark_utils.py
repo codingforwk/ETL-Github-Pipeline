@@ -1,5 +1,4 @@
 import os
-import logging
 from pyspark.sql import SparkSession
 from dotenv import load_dotenv
 
