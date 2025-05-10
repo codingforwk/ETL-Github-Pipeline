@@ -59,7 +59,6 @@ ETL-Github-Pipeline/
 
 5. Airflow Orchestration  
    - Coordinates all pipeline stages  
-   - Handles scheduling and error recovery  
 
 ## 🚦 Setup Instructions
 1. Clone repository:
