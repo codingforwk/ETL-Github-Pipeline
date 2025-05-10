@@ -1,3 +1,6 @@
+![image](https://github.com/user-attachments/assets/4a1b8b5b-1b8e-4363-b475-f9f85cdf3c64)
+
+
 # 🚀 ETL GitHub Pipeline Project
 
 This project is a fully containerized, modular end-to-end data engineering pipeline that ingests GitHub Archive data, transforms it using Apache Spark and Delta Lake, triggers an Azure Synapse pipeline, and models data using dbt — all orchestrated with Apache Airflow.
