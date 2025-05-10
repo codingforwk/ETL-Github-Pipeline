@@ -5,6 +5,12 @@
 
 This project is a fully containerized, modular end-to-end data engineering pipeline that ingests GitHub Archive data, transforms it using Apache Spark, triggers an Azure Synapse pipeline, and models data using dbt — all orchestrated with Apache Airflow.
 
+## 🔨 End-to-End Data Pipeline Architecture
+
+![Untitled Diagram drawio(1)](https://github.com/user-attachments/assets/73394ad2-fd42-4414-9662-2d6bb61c7d0d)
+
+
+
 ## 🔧 Stack
 
 - **Airflow** - Orchestration  
