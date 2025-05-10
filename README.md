@@ -38,7 +38,7 @@ ETL-Github-Pipeline/
 
 2. Bronze to Silver Transformation  
    - Processes data using Spark transformations  
-   - Outputs cleaned data in Delta format (Silver)  
+   - Outputs cleaned data in Parquet format (Silver)  
 
 3. Azure Synapse Activation  
    - Triggers Synapse pipelines via Python API  
@@ -52,7 +52,7 @@ ETL-Github-Pipeline/
    - Coordinates all pipeline stages  
    - Handles scheduling and error recovery  
 
-## Setup Instructions
+##🚦 Setup Instructions
 1. Clone repository:
    ```
    git clone https://github.com/your-repo/ETL-Github-Pipeline  
@@ -67,26 +67,33 @@ ETL-Github-Pipeline/
    terraform init  
    terraform apply  
 
-7. Configure environment:  
+7. Configure environment:
+   ```
    export AZURE_TENANT_ID=your_tenant_id  
    export SYNAPSE_WORKSPACE=your_workspace_name  
 
 ## Execution Commands
-- Start Airflow:  
+- Start Airflow:
+  ```
   airflow standalone  
 
-- Run Spark job:  
+- Run Spark job:
+  ```
   spark-submit transforms/bronze_to_silver/transform.py  
 
-- Execute dbt models:  
+- Execute dbt models:
+  ```
   dbt run --project-dir transforms/silver_to_gold  
 
-## Quality Assurance
-- Run unit tests:  
+#✅ Quality Assurance
+- Run unit tests:
+  ```
   pytest tests/  
 
-- Validate data models:  
+- Validate data models:
+  ```
   dbt test  
 
-- Monitor pipeline:  
+- Monitor pipeline:
+  ```
   airflow dags list-runs  
